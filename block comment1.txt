@@ -1,0 +1,112 @@
+1.
+mapping (address => uint256) private certificate;
+
+
+2.
+mapping (address => uint256) private period;
+
+3.
+event DepositEvent(address indexed from, uint256 value, uint256 timestamp);
+
+event WithdrawEvent(address indexed from, uint256 value, uint256 timestamp);
+
+event TransferEvent(address indexed from, address indexed to, uint256 value, uint256 timestamp);
+event PurchaseEvent(address indexed from, address indexed to, uint256 value, uint256 timestamp);
+event ContractDoneEvent(address indexed from, address indexed to, uint256 value, uint256 timestamp);
+event ContractReleaseEvent(address indexed from, address indexed to, uint256 value, uint256 timestamp);
+記錄時間標籤
+
+
+
+4.
+function purchase(uint256 etherValue, uint256 periodValue1) public  payable {
+	    
+        uint256 weiValue = etherValue * 1 ether;
+
+        require(periodValue1 <= 12, "your input are wrong");
+
+        balance[msg.sender] += weiValue;
+
+        period[msg.sender] = periodValue1;
+
+        certificate[msg.sender] += weiValue;
+
+
+        emit PurchaseEvent(msg.sender, etherValue, periodValue1, now);
+    
+}
+
+購買功能，包含正整數定存金額，與正整數定存期間
+期間小於等於12期，若條件不符合則拋出異常
+記錄會員定存帳戶餘額，並讓定存金額增加
+記錄會員定存期數
+驗證會員定存金額
+通知purchase給web3.js
+
+
+5.
+function contractDone() public {
+
+        uint256 weiValue = certificate[msg.sender];
+
+        uint256 period1 =  period[msg.sender];
+
+        
+weiValue = weiValue * period1 / 100;
+
+        
+balance[msg.sender] += weiValue;
+
+        certificate[msg.sender] = 0;
+
+        period[msg.sender] = 0;
+
+        
+emit ContractDoneEvent(msg.sender,weiValue, now);
+        
+    
+}
+
+
+合約期滿功能
+計算本金*期數/100
+將計算結果加到定存帳戶餘額
+將定存帳戶餘額重設為0
+將定存期數重設為0
+通知ContractDoneEvent給web3.js
+
+
+
+6.
+function contractrelease() public {
+
+        uint256 weiValue = certificate[msg.sender];
+
+        uint256 period1 =  period[msg.sender];
+
+        
+weiValue = weiValue * period1 / 100;
+
+        
+balance[msg.sender] += weiValue;
+
+        certificate[msg.sender] = 0;
+
+        period[msg.sender] = 0;
+
+        
+emit ContractReleaseEvent(msg.sender,weiValue, now);
+        
+    
+}
+
+合約提前解約功能
+計算本金*期數/100
+將計算結果加到定存帳戶餘額
+將定存金額重設為0
+將定存期數重設為0
+通知contractrelease給web3.js
+
+7.
+Banl.js
+更新區塊練位址合約
